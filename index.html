@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅行計畫</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏝️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #f0f9ff;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+        }
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-box {
+            animation: fadeIn 0.8s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-teal-600">旅行計畫</h1>
+                <p class="text-gray-500 mt-2">請輸入通關密碼</p>
+            </div>
+            
+            <div class="mb-6">
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="passcode" 
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="請輸入通關密碼"
+                    >
+                    <button 
+                        id="togglePassword"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+                <p id="error-message" class="text-red-500 mt-2 text-sm hidden">密碼不正確，請再試一次</p>
+            </div>
+            
+            <button 
+                id="login-button"
+                class="w-full bg-teal-600 text-white py-3 rounded-lg font-medium hover:bg-teal-700 transition-colors"
+            >
+                行きましょう ♪
+            </button>
+            
+            <div class="text-center mt-6">
+                <p class="text-sm text-gray-500">© 2025 旅行規劃</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 密碼驗證與加密函數
+        function encryptPasscode(passcode) {
+            // 簡單的加密函數，實際應用可以使用更複雜的加密方法
+            const salt = "travel2025";
+            return btoa(passcode + salt);
+        }
+        
+        function validatePasscode(passcode) {
+            // 檢查密碼是否正確，並返回對應的目的地
+            const passcodeMap = {
+                "eXBlcnRyYXZlbDIwMjU=": "2025-hokkaido",
+                "a3Vyb3RyYXZlbDIwMjU=": "2025-tateyama"
+            };
+            
+            // 將輸入的密碼加密
+            const encrypted = encryptPasscode(passcode);
+            
+            // 返回對應的目的地，如果密碼不正確則返回null
+            return passcodeMap[encrypted] || null;
+        }
+        
+        // 從密碼生成加密金鑰 (用於解密行程資料)
+        function generateEncryptionKey(passcode) {
+            const salt = "itinerary2025";
+            return encryptPasscode(passcode + salt);
+        }
+        
+        function generateToken(destination) {
+            // 生成token
+            const timestamp = new Date().getTime();
+            const tokenData = {
+                destination: destination,
+                timestamp: timestamp,
+                validated: true
+            };
+            return btoa(JSON.stringify(tokenData));
+        }
+        
+        // 處理登入流程
+        document.getElementById('login-button').addEventListener('click', function() {
+            const passcode = document.getElementById('passcode').value;
+            const errorMessage = document.getElementById('error-message');
+            
+            // 驗證密碼並獲取目的地
+            const destination = validatePasscode(passcode);
+            
+            if (destination) {
+                // 密碼正確，生成token並保存
+                const token = generateToken(destination);
+                localStorage.setItem('travel_auth', token);
+                
+                // 生成並保存加密金鑰 (用於解密行程資料)
+                const encryptionKey = generateEncryptionKey(passcode);
+                localStorage.setItem('travel_key', encryptionKey);
+                
+                // 導向到相應的頁面
+                window.location.href = `./${destination}/index.html`;
+            } else {
+                // 密碼錯誤，顯示錯誤訊息
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 3000);
+            }
+        });
+        
+        // 按Enter也可以登入
+        document.getElementById('passcode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('login-button').click();
+            }
+        });
+        
+        // 檢查是否已經登入過
+        window.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('travel_auth');
+            if (token) {
+                try {
+                    const tokenData = JSON.parse(atob(token));
+                    // 檢查是否有效的token
+                    if (tokenData.validated && tokenData.destination) {
+                        const validDestinations = ["2025-hokkaido", "2025-tateyama"];
+                        // 確保同時有加密金鑰，如果沒有，則清除 token
+                        const encryptionKey = localStorage.getItem('travel_key');
+                        if (validDestinations.includes(tokenData.destination) && encryptionKey) {
+                            window.location.href = `./${tokenData.destination}/index.html`;
+                        } else {
+                            // 金鑰不存在，清除 token
+                            localStorage.removeItem('travel_auth');
+                        }
+                    }
+                } catch (e) {
+                    // Token解析錯誤，清除token
+                    localStorage.removeItem('travel_auth');
+                    localStorage.removeItem('travel_key');
+                }
+            }
+        });
+        
+        // 切換密碼顯示/隱藏
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('passcode');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,38 @@
+# 原始碼檔案
+src/
+
+# 加密相關
+*.key
+*.pem
+tools/encrypt.js
+tools/test_decrypt.js
+package-lock.json
+package.json
+test-decrypt.html
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 編輯器設定
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 相依套件
+node_modules/
+
+# 日誌檔案
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 環境設定
+.env
+.env.local
+.env.*.local 
+
+#說明
+README.md
