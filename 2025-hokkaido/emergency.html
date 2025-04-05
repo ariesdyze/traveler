@@ -138,5 +138,33 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 清除資料按鈕 -->
+    <div class="p-4 flex justify-center">
+        <button id="clearStorageBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow transition-colors">
+            <i class="fas fa-cloud mr-2"></i>清除本機端天氣資料
+        </button>
+    </div>
+
+    <script>
+        // 清除天氣相關 localStorage 按鈕功能
+        document.getElementById('clearStorageBtn').addEventListener('click', function() {
+            // 找出所有與天氣相關的localStorage項目並清除
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('weather') || key.includes('天氣') || key.includes('forecast'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            // 刪除找到的天氣相關鍵值
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            // 返回前一頁
+            window.history.back();
+        });
+    </script>
 </body>
 </html>
