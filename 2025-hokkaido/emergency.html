@@ -162,8 +162,20 @@
             // 刪除找到的天氣相關鍵值
             keysToRemove.forEach(key => localStorage.removeItem(key));
             
+            // 設置前一頁需要重新整理的標記
+            sessionStorage.setItem('needRefresh', 'true');
+            
             // 返回前一頁
-            window.history.back();
+            window.location.href = 'index.html';
+        });
+        
+        // 檢查頁面是否需要重新整理
+        window.addEventListener('pageshow', function(event) {
+            // 如果是從瀏覽歷史回來且需要重新整理的標記存在
+            if (event.persisted && sessionStorage.getItem('needRefresh') === 'true') {
+                sessionStorage.removeItem('needRefresh');
+                window.location.reload();
+            }
         });
     </script>
 </body>
